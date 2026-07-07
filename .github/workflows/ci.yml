@@ -1,0 +1,29 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: build + standards
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      # make test = gofmt check + go vet + security checks + go test ./...
+      # The secret-scan step in ci/checks.sh skips gracefully when
+      # trufflehog/gitleaks aren't installed (GitHub does its own secret
+      # scanning), so no extra tooling is needed here.
+      - name: make test
+        run: make test
