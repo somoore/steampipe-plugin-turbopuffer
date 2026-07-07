@@ -1,8 +1,8 @@
 connection "turbopuffer" {
   plugin = "somoore/turbopuffer"
 
-  # API key (or set the TURBOPUFFER_API_KEY environment variable). Prefer a key
-  # scoped to read-only if your org uses key permissions — this plugin only reads.
+  # API key (or set the TURBOPUFFER_API_KEY environment variable). A read-only
+  # key works, but it must include the "list namespaces" permission.
   # api_key = "tpuf_..."
 
   # Regions to scan. Each region is a separate turbopuffer endpoint

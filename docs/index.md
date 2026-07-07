@@ -63,7 +63,7 @@ steampipe query "select id, region from turbopuffer_namespace"
 | Item        | Description |
 |-------------|-------------|
 | Credentials | A turbopuffer API key, created in the dashboard under **API Keys**. |
-| Permissions | The plugin is read-only: it issues namespace lists, metadata reads, and (only when you explicitly qual them) document queries and recall evaluations. Use a read-scoped key if your org has them. |
+| Permissions | The plugin is read-only: it issues namespace lists, metadata reads, and (only when you explicitly qual them) document queries and recall evaluations. Use a read-scoped key, but note it must include the **list namespaces** permission — turbopuffer issues read keys without it, and those fail the `turbopuffer_namespace` table with a 403. |
 | Radius      | Each connection scans one organization across the `regions` you list. Regions are separate endpoints; unlisted regions are invisible. |
 | Resolution  | 1. `api_key` in the connection config. 2. `TURBOPUFFER_API_KEY` environment variable. |
 

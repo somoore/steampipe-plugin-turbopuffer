@@ -5,7 +5,8 @@ import (
 )
 
 type turbopufferConfig struct {
-	// Falls back to TURBOPUFFER_API_KEY. Use a read-only key if available.
+	// Falls back to TURBOPUFFER_API_KEY. Read key must
+	// also carry the list-namespaces permission.
 	APIKey *string `hcl:"api_key"`
 
 	// Regions to fan out across. Defaults to ["gcp-us-central1"].
