@@ -1,7 +1,7 @@
 STEAMPIPE_INSTALL_DIR ?= ~/.steampipe
 BUILD_TAGS = netgo
 
-.PHONY: install test fmt vet hooks
+.PHONY: install test fmt vet hooks check-security
 
 install:
 	go build -o $(STEAMPIPE_INSTALL_DIR)/plugins/local/turbopuffer/turbopuffer.plugin -tags "$(BUILD_TAGS)" *.go
@@ -14,8 +14,13 @@ fmt:
 vet:
 	go vet ./...
 
-# `make test` runs everything: format check, vet, and the standards + unit tests.
-test: fmt vet
+# Dependency-pinning, secret, .env, and dedup checks (see scripts/checks.sh).
+check-security:
+	@./scripts/checks.sh
+
+# `make test` runs everything: format check, vet, standards + unit tests, and
+# the security checks.
+test: fmt vet check-security
 	go test ./...
 
 # Install the git pre-commit hook that runs `make test`.
