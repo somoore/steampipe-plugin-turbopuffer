@@ -23,8 +23,10 @@ check-security:
 test: fmt vet check-security
 	go test ./...
 
-# Install the git pre-commit hook that runs `make test`.
+# Point git at the versioned hooks dir so pre-commit AND pre-push run
+# automatically. One setting, tracked in the repo, survives fresh clones
+# (each clone just needs `make hooks` once).
 hooks:
-	@mkdir -p .git/hooks
-	@ln -sf ../../scripts/pre-commit .git/hooks/pre-commit
-	@echo "installed .git/hooks/pre-commit -> scripts/pre-commit"
+	@git config core.hooksPath scripts/hooks
+	@chmod +x scripts/hooks/*
+	@echo "git core.hooksPath -> scripts/hooks (pre-commit + pre-push active)"

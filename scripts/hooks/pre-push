@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+# Pre-push hook: last gate before code leaves the machine.
+# Runs the full `make test` (standards + security) AND a git-history secret
+# scan (the working-tree scan in pre-commit can't see secrets in old commits).
+set -euo pipefail
+
+cd "$(git rev-parse --show-toplevel)"
+
+echo "pre-push: running make test ..."
+if ! make test; then
+  echo
+  echo "pre-push: checks failed — push aborted."
+  exit 1
+fi
+
+echo "pre-push: scanning full git history for secrets ..."
+if command -v trufflehog >/dev/null 2>&1; then
+  if ! trufflehog git "file://$(pwd)" --no-update --only-verified --fail >/dev/null 2>&1; then
+    echo
+    echo "pre-push: trufflehog found a verified secret in git history — push aborted."
+    echo "Inspect with: trufflehog git file://$(pwd) --only-verified"
+    exit 1
+  fi
+elif command -v gitleaks >/dev/null 2>&1; then
+  if ! gitleaks detect --source . --no-banner >/dev/null 2>&1; then
+    echo
+    echo "pre-push: gitleaks found a secret in git history — push aborted."
+    echo "Inspect with: gitleaks detect --source ."
+    exit 1
+  fi
+else
+  echo "pre-push: warn: no trufflehog/gitleaks installed — skipping history scan."
+fi
+
+echo "pre-push: all checks passed."

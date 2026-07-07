@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Pre-commit hook: enforce Steampipe standards before a commit lands.
 # Runs `make test` (gofmt check + vet + standards/unit tests).
-# Install with: make hooks
+# Activated (with pre-push) via: make hooks  (sets git core.hooksPath)
 set -euo pipefail
 
 cd "$(git rev-parse --show-toplevel)"
