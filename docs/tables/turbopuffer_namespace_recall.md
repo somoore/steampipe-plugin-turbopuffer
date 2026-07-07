@@ -49,3 +49,18 @@ from
 where
   namespace = 'prod-acme';
 ```
+
+### List namespaces where the ANN index returns fewer results than exhaustive search
+
+```sql
+select
+  namespace,
+  avg_ann_count,
+  avg_exhaustive_count,
+  avg_exhaustive_count - avg_ann_count as shortfall
+from
+  turbopuffer_namespace_recall
+where
+  namespace = 'prod-acme'
+  and avg_ann_count < avg_exhaustive_count;
+```

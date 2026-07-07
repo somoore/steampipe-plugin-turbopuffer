@@ -67,6 +67,32 @@ steampipe query "select id, region from turbopuffer_namespace"
 | Radius      | Each connection scans one organization across the `regions` you list. Regions are separate endpoints; unlisted regions are invisible. |
 | Resolution  | 1. `api_key` in the connection config. 2. `TURBOPUFFER_API_KEY` environment variable. |
 
+## Multiple Connections
+
+Each `turbopuffer` connection scans one organization. To query several at once — multiple orgs, or a prod/staging split — define a connection per credential and group them with an [aggregator](https://steampipe.io/docs/managing/connections#using-aggregators):
+
+```hcl
+connection "turbopuffer_prod" {
+  plugin  = "somoore/turbopuffer"
+  api_key = "tpuf_prod_..."
+  regions = ["gcp-us-central1"]
+}
+
+connection "turbopuffer_staging" {
+  plugin  = "somoore/turbopuffer"
+  api_key = "tpuf_staging_..."
+  regions = ["gcp-us-central1"]
+}
+
+connection "turbopuffer_all" {
+  plugin      = "somoore/turbopuffer"
+  type        = "aggregator"
+  connections = ["turbopuffer_prod", "turbopuffer_staging"]
+}
+```
+
+Querying `turbopuffer_all.turbopuffer_namespace` fans out across every member connection and adds a `_ctx` column identifying which one each row came from. See [Using Aggregators](https://steampipe.io/docs/managing/connections#using-aggregators).
+
 ## The control-plane gap (read this)
 
 turbopuffer's public API is **data-plane only**. API keys, their permissions, organization membership and billing exist only in the dashboard — so there is deliberately no `turbopuffer_api_key` table. When that management API ships, key-hygiene tables land here first.
