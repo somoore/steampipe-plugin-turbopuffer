@@ -32,7 +32,7 @@ order by approx_logical_bytes desc;
 
 ## Documentation
 
-- **[Table definitions & examples →](/plugins/somoore/turbopuffer/tables)**
+- **[Table definitions & examples →](tables)**
 
 ## Quick start
 
