@@ -1,3 +1,8 @@
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/turbopuffer-lockup-dark.svg">
+  <img alt="turbopuffer" src="docs/assets/turbopuffer-lockup-light.svg" width="360">
+</picture>
+
 # turbopuffer plugin for Steampipe
 
 Use SQL to query namespaces, schemas, documents and recall in [turbopuffer][].
