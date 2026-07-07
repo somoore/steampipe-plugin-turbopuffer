@@ -1,24 +1,47 @@
 # turbopuffer plugin for Steampipe
 
-Query [turbopuffer](https://turbopuffer.com) — namespaces, schemas, documents, recall — with SQL.
+Use SQL to query namespaces, schemas, documents and recall in [turbopuffer][].
 
-- **[Table docs & examples](./docs/tables)** · **[Get started](./docs/index.md)**
-- Pairs with the [turbopuffer Security Benchmark mod](../powerpipe-mod-turbopuffer-compliance) (15 Powerpipe controls + branded dashboards).
+- **[Get started →](docs/index.md)**
+- Documentation: [Table definitions & examples](docs/tables)
 
 ```sql
-select namespace, name
-from turbopuffer_namespace_attribute
-where name in ('tenant_id') and not filterable;   -- isolation silently unenforceable
+select id, region, approx_row_count, encryption_mode, updated_at
+from turbopuffer_namespace
+order by approx_logical_bytes desc;
 ```
 
-## Developing
+Pairs with the [turbopuffer Security Benchmark mod][mod] — 15 Powerpipe controls and branded dashboards over these tables.
 
-```bash
-git clone <this repo> && cd steampipe-plugin-turbopuffer
-go mod tidy
-make install          # builds into ~/.steampipe/plugins/local/turbopuffer/
-cp config/turbopuffer.spc ~/.steampipe/config/
-steampipe query "select * from turbopuffer_region"
-```
+## Quick start
 
-Built on the official [`turbopuffer-go`](https://github.com/turbopuffer/turbopuffer-go) client; endpoints and response fields were verified against its v2 surface. Unofficial community plugin — not affiliated with turbopuffer inc. MIT licensed (switch to Apache-2.0 before any Hub submission if preferred; both are conventional).
+Install the plugin with [Steampipe][]:
+
+    steampipe plugin install somoore/turbopuffer
+
+Configure your [connection](docs/index.md) with a turbopuffer API key and the regions to scan.
+
+## Development
+
+To build the plugin and install it in your `.steampipe` directory:
+
+    make install
+
+Copy the default config file:
+
+    cp config/turbopuffer.spc ~/.steampipe/config/turbopuffer.spc
+
+Run the tests and standards checks:
+
+    make test
+
+Built on the official [`turbopuffer-go`][sdk] client; endpoints and response fields were verified against its v2 surface. Unofficial community plugin — not affiliated with turbopuffer inc.
+
+## License
+
+Apache 2
+
+[steampipe]: https://steampipe.io
+[turbopuffer]: https://turbopuffer.com
+[sdk]: https://github.com/turbopuffer/turbopuffer-go
+[mod]: https://github.com/somoore/powerpipe-mod-turbopuffer-compliance
