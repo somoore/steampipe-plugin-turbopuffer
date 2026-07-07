@@ -2,7 +2,7 @@
 organization: somoore
 category: ["ai", "security"]
 icon_url: "/images/plugins/somoore/turbopuffer.svg"
-brand_color: "#F2A25C"
+brand_color: "#FB915F"
 display_name: "turbopuffer"
 short_name: "turbopuffer"
 description: "Steampipe plugin to query turbopuffer namespaces, schemas, documents and recall — the inventory layer for vector-search security posture."
