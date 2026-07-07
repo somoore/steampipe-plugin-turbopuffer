@@ -23,9 +23,9 @@ fmt:
 vet:
 	go vet ./...
 
-# Dependency-pinning, secret, .env, and dedup checks (see scripts/checks.sh).
+# Dependency-pinning, secret, .env, and dedup checks (see ci/checks.sh).
 check-security:
-	@./scripts/checks.sh
+	@./ci/checks.sh
 
 # `make test` runs everything: format check, vet, standards + unit tests, and
 # the security checks.
@@ -36,6 +36,6 @@ test: fmt vet check-security
 # automatically. One setting, tracked in the repo, survives fresh clones
 # (each clone just needs `make hooks` once).
 hooks:
-	@git config core.hooksPath scripts/hooks
-	@chmod +x scripts/hooks/*
-	@echo "git core.hooksPath -> scripts/hooks (pre-commit + pre-push active)"
+	@git config core.hooksPath ci/hooks
+	@chmod +x ci/hooks/*
+	@echo "git core.hooksPath -> ci/hooks (pre-commit + pre-push active)"

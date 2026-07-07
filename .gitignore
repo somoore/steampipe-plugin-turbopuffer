@@ -5,8 +5,8 @@
 *.spc.local
 **/config/*.spc.local
 
-# Pre-release checklist runner (local/CI release aid, not shipped source)
-scripts/release-checklist.sh
+# Local dev-aid scripts (not shipped). CI-critical scripts live in ci/ (tracked).
+scripts/
 
 # macOS
 .DS_Store
@@ -39,5 +39,3 @@ vendor/
 .steampipe/
 .powerpipe/
 
-# OpenAPI spec-diff dev aid (not shipped source)
-scripts/spec-diff.sh
