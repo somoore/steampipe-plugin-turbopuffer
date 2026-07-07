@@ -1,6 +1,6 @@
 module github.com/somoore/steampipe-plugin-turbopuffer
 
-go 1.23.1
+go 1.26.0
 
 require (
 	// Official turbopuffer client — endpoint paths and response types in this
