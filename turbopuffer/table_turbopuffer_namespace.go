@@ -45,6 +45,8 @@ func tableTurbopufferNamespace(_ context.Context) *plugin.Table {
 			{Name: "created_at", Type: proto.ColumnType_TIMESTAMP, Hydrate: getNamespaceMetadata, Transform: transform.FromField("CreatedAt"), Description: "When the namespace was created."},
 			{Name: "encryption_key_name", Type: proto.ColumnType_STRING, Hydrate: getNamespaceMetadata, Transform: transform.FromField("Encryption.KeyName"), Description: "CMEK key resource name, if customer-managed encryption is enabled."},
 			{Name: "encryption_mode", Type: proto.ColumnType_STRING, Hydrate: getNamespaceMetadata, Transform: transform.FromField("Encryption.Mode"), Description: "Encryption mode; 'customer_managed' when CMEK is configured."},
+			{Name: "index_status", Type: proto.ColumnType_STRING, Hydrate: getNamespaceMetadata, Transform: transform.FromField("Index.Status"), Description: "Index status; 'up-to-date' or 'updating' when writes are not yet fully indexed."},
+			{Name: "index_unindexed_bytes", Type: proto.ColumnType_INT, Hydrate: getNamespaceMetadata, Transform: transform.FromField("Index.UnindexedBytes"), Description: "Bytes written to the WAL but not yet indexed; nonzero means the index is lagging recent writes."},
 			{Name: "pinning", Type: proto.ColumnType_JSON, Hydrate: getNamespaceMetadata, Transform: transform.FromField("Pinning"), Description: "Pinning configuration and status, if any."},
 			{Name: "region", Type: proto.ColumnType_STRING, Transform: transform.FromField("Region"), Description: "turbopuffer region hosting the namespace (e.g. gcp-us-central1)."},
 			{Name: "schema", Type: proto.ColumnType_JSON, Hydrate: getNamespaceMetadata, Transform: transform.FromField("Schema"), Description: "Full attribute schema as JSON (attribute -> config)."},
