@@ -6,12 +6,33 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## v0.0.1 [Unreleased]
 
-_First release._
+First release. A read-only, region-scoped Steampipe plugin that exposes a
+turbopuffer organization's data-plane API as SQL, built for vector-search
+security and posture use cases.
 
-### Tables
+### Added
 
-- `turbopuffer_namespace`
-- `turbopuffer_namespace_attribute`
-- `turbopuffer_document`
-- `turbopuffer_namespace_recall`
-- `turbopuffer_region`
+- **Tables**
+  - `turbopuffer_namespace` — namespaces per region, with size, activity,
+    encryption, index status, and full attribute schema from the metadata API.
+  - `turbopuffer_namespace_attribute` — one row per schema attribute, with
+    `filterable`, full-text/regex/glob/fuzzy, and vector/sparse index flags.
+  - `turbopuffer_document` — targeted document lookups within a namespace
+    (vectors always excluded), for canary checks and small samples.
+  - `turbopuffer_namespace_recall` — on-demand recall evaluation (ANN vs.
+    exhaustive ground truth); runs real searches.
+  - `turbopuffer_region` — configured regions and their endpoints, a join
+    anchor for residency queries.
+- **Connection config** — `api_key` (or the `TURBOPUFFER_API_KEY` environment
+  variable) and a `regions` list; the plugin fans out across all configured
+  regions via a query matrix.
+- **Resilience** — 404s ignored as skips, 429/5xx retried with backoff, and
+  per-namespace metadata hydration capped for polite concurrency.
+
+### Notes
+
+- The public turbopuffer API is data-plane only, so there is no
+  `turbopuffer_api_key` or billing/RBAC table.
+- Endpoint paths and response fields were verified against the official
+  `turbopuffer-go/v2` client and the turbopuffer OpenAPI spec, then confirmed
+  against a live account (load-tested to 1,200+ namespaces).
