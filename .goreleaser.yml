@@ -1,0 +1,19 @@
+# Standard Steampipe plugin release config (see steampipe.io docs: plugin release).
+version: 2
+builds:
+  - env:
+      - CGO_ENABLED=0
+    goos: [linux, darwin]
+    goarch: [amd64, arm64]
+    id: "steampipe"
+    binary: "{{ .ProjectName }}.plugin"
+    flags: ["-tags=netgo"]
+archives:
+  - formats: [gzip]
+    name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
+    files: ["none*"]
+checksum:
+  name_template: "{{ .ProjectName }}_SHA256SUMS"
+  algorithm: sha256
+changelog:
+  disable: true
