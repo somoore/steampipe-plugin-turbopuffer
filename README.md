@@ -40,8 +40,6 @@ Run the tests and standards checks:
 
     make test
 
-Release notes are tracked in [`CHANGELOG.md`](CHANGELOG.md).
-
 Built on the official [`turbopuffer-go`][sdk] client; endpoints and response fields were verified against its v2 surface. Unofficial community plugin — not affiliated with turbopuffer inc.
 
 ## License
