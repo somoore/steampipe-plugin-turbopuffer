@@ -9,6 +9,7 @@ Use SQL to query namespaces, schemas, documents and recall in [turbopuffer][].
 
 - **[Get started →](docs/index.md)**
 - Documentation: [Table definitions & examples](docs/tables)
+- Cookbook: [Example queries](docs/example_queries.md) — a guided tour, inventory to ACL audit
 
 ```sql
 select id, region, approx_row_count, encryption_mode, updated_at

@@ -33,6 +33,7 @@ order by approx_logical_bytes desc;
 ## Documentation
 
 - **[Table definitions & examples →](tables)**
+- **[Example queries →](example_queries.md)** — a guided getting-started tour
 
 ## Quick start
 
