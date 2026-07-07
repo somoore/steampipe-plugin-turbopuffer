@@ -38,3 +38,6 @@ vendor/
 # Steampipe / Powerpipe
 .steampipe/
 .powerpipe/
+
+# OpenAPI spec-diff dev aid (not shipped source)
+scripts/spec-diff.sh
