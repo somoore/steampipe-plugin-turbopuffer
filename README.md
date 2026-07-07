@@ -49,4 +49,4 @@ Apache 2
 [steampipe]: https://steampipe.io
 [turbopuffer]: https://turbopuffer.com
 [sdk]: https://github.com/turbopuffer/turbopuffer-go
-[mod]: https://github.com/somoore/powerpipe-mod-turbopuffer-compliance
+[mod]: https://github.com/somoore/powerpipe-turbopuffer-security-benchmark
