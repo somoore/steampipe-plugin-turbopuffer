@@ -5,6 +5,9 @@
 *.spc.local
 **/config/*.spc.local
 
+# Pre-release checklist runner (local/CI release aid, not shipped source)
+scripts/release-checklist.sh
+
 # macOS
 .DS_Store
 .AppleDouble

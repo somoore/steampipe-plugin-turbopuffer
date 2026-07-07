@@ -1,10 +1,19 @@
 STEAMPIPE_INSTALL_DIR ?= ~/.steampipe
 BUILD_TAGS = netgo
 
-.PHONY: install test fmt vet hooks check-security
+.PHONY: install build test fmt vet hooks check-security release-check
 
 install:
 	go build -o $(STEAMPIPE_INSTALL_DIR)/plugins/local/turbopuffer/turbopuffer.plugin -tags "$(BUILD_TAGS)" *.go
+
+# Release build: gate on the pre-release checklist, then build the binary.
+# The checklist runner is gitignored; skip the gate gracefully if it's absent.
+build: release-check install
+
+# Run the pre-release checklist (auto-checks + manual reminders).
+release-check:
+	@if [ -x scripts/release-checklist.sh ]; then ./scripts/release-checklist.sh; \
+	else echo "release-check: scripts/release-checklist.sh not present (gitignored) — skipping"; fi
 
 # Fail if any file is not gofmt-clean, listing the offenders.
 fmt:
