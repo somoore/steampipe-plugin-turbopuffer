@@ -35,12 +35,7 @@ func tableTurbopufferRegion(_ context.Context) *plugin.Table {
 
 // listRegions streams the connection's configured regions and their endpoints.
 func listRegions(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) (interface{}, error) {
-	cfg := GetConfig(d.Connection)
-	regions := cfg.Regions
-	if len(regions) == 0 {
-		regions = []string{defaultRegion}
-	}
-	for _, r := range regions {
+	for _, r := range configuredRegions(GetConfig(d.Connection)) {
 		d.StreamListItem(ctx, regionRow{
 			Region:   r,
 			Endpoint: "https://" + r + ".turbopuffer.com",

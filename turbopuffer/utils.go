@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"os"
+	"strings"
 
 	tpuf "github.com/turbopuffer/turbopuffer-go/v2"
 	"github.com/turbopuffer/turbopuffer-go/v2/option"
@@ -17,7 +18,7 @@ const defaultRegion = "gcp-us-central1"
 // getClient returns a region-scoped client, cached per region.
 func getClient(ctx context.Context, d *plugin.QueryData, region string) (*tpuf.Client, error) {
 	cacheKey := "turbopuffer-client-" + region
-	if cached, ok := d.ConnectionManager.Cache.Get(cacheKey); ok {
+	if cached, ok := d.ConnectionCache.Get(ctx, cacheKey); ok {
 		return cached.(*tpuf.Client), nil
 	}
 
@@ -35,8 +36,29 @@ func getClient(ctx context.Context, d *plugin.QueryData, region string) (*tpuf.C
 		option.WithRegion(region),
 	)
 
-	d.ConnectionManager.Cache.Set(cacheKey, &client)
+	if err := d.ConnectionCache.Set(ctx, cacheKey, &client); err != nil {
+		plugin.Logger(ctx).Warn("getClient", "region", region, "cache_set_error", err)
+	}
 	return &client, nil
+}
+
+// configuredRegions returns the connection's regions: trimmed, deduped,
+// defaulted when unset.
+func configuredRegions(cfg turbopufferConfig) []string {
+	regions := make([]string, 0, len(cfg.Regions))
+	seen := map[string]bool{}
+	for _, r := range cfg.Regions {
+		r = strings.TrimSpace(r)
+		if r == "" || seen[r] {
+			continue
+		}
+		seen[r] = true
+		regions = append(regions, r)
+	}
+	if len(regions) == 0 {
+		return []string{defaultRegion}
+	}
+	return regions
 }
 
 //// ERROR HANDLING

@@ -75,10 +75,7 @@ func listNamespaces(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateD
 	}
 
 	page, err := client.Namespaces(ctx, params)
-	for page != nil {
-		if err != nil {
-			return nil, err
-		}
+	for err == nil && page != nil {
 		for _, ns := range page.Namespaces {
 			d.StreamListItem(ctx, namespaceRow{ID: ns.ID, Region: region})
 			if d.RowsRemaining(ctx) == 0 {
@@ -87,7 +84,11 @@ func listNamespaces(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateD
 		}
 		page, err = page.GetNextPage()
 	}
-	return nil, err
+	if err != nil {
+		plugin.Logger(ctx).Error("turbopuffer_namespace.listNamespaces", "region", region, "error", err)
+		return nil, err
+	}
+	return nil, nil
 }
 
 //// HYDRATE FUNCTIONS
@@ -122,7 +123,8 @@ func likeToPrefix(pattern string) (string, bool) {
 
 func containsWildcard(s string) bool {
 	for _, c := range s {
-		if c == '%' || c == '_' {
+		// Backslash too: escaped wildcards must stay in Postgres.
+		if c == '%' || c == '_' || c == '\\' {
 			return true
 		}
 	}

@@ -38,11 +38,7 @@ const matrixKeyRegion = "region"
 
 // regionMatrix builds one matrix item per configured region.
 func regionMatrix(ctx context.Context, d *plugin.QueryData) []map[string]interface{} {
-	cfg := GetConfig(d.Connection)
-	regions := cfg.Regions
-	if len(regions) == 0 {
-		regions = []string{defaultRegion}
-	}
+	regions := configuredRegions(GetConfig(d.Connection))
 	matrix := make([]map[string]interface{}, 0, len(regions))
 	for _, r := range regions {
 		matrix = append(matrix, map[string]interface{}{matrixKeyRegion: r})

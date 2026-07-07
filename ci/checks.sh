@@ -9,7 +9,7 @@
 # Run standalone with: make check-security
 set -uo pipefail
 
-cd "$(git rev-parse --show-toplevel)"
+cd "$(git rev-parse --show-toplevel)" || exit 1
 fail=0
 
 say()  { printf '\n\033[1m== %s\033[0m\n' "$1"; }
@@ -35,7 +35,9 @@ fi
 unpinned=$(go list -m -f '{{if not .Main}}{{.Path}} {{.Version}}{{end}}' all 2>/dev/null \
   | awk '$2 !~ /^v[0-9]+\.[0-9]+\.[0-9]+/ {print $1" "$2}')
 if [ -n "$unpinned" ]; then
-  bad "unpinned/non-release dependency versions:"; echo "$unpinned" | sed 's/^/    /'
+  bad "unpinned/non-release dependency versions:"
+  # shellcheck disable=SC2001  # sed indents multi-line output; clearer than expansion
+  echo "$unpinned" | sed 's/^/    /'
 else
   ok "all dependencies pinned to release versions"
 fi
@@ -66,6 +68,7 @@ env_hits=$(git ls-files -co --exclude-standard \
   | grep -vE '(^|/)config/turbopuffer\.spc$' || true)
 if [ -n "$env_hits" ]; then
   bad "credential-shaped files present (add to .gitignore or remove):"
+  # shellcheck disable=SC2001  # sed indents multi-line output; clearer than expansion
   echo "$env_hits" | sed 's/^/    /'
 else
   ok "no .env / key / credential files"

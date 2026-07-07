@@ -17,8 +17,8 @@ type recallRow struct {
 	AvgRecall          float64
 	AvgAnnCount        float64
 	AvgExhaustiveCount float64
-	Queries            int64
-	TopK               int64
+	Queries            *int64 // nil (SQL null) when the server default was used
+	TopK               *int64
 }
 
 func tableTurbopufferNamespaceRecall(_ context.Context) *plugin.Table {
@@ -65,19 +65,22 @@ func listNamespaceRecall(ctx context.Context, d *plugin.QueryData, _ *plugin.Hyd
 	}
 
 	params := tpuf.NamespaceRecallParams{}
-	var queries, topK int64
+	var queries, topK *int64
 	if q := d.EqualsQuals["queries"]; q != nil {
-		queries = q.GetInt64Value()
-		params.Num = tpuf.Int(queries)
+		v := q.GetInt64Value()
+		queries = &v
+		params.Num = tpuf.Int(v)
 	}
 	if q := d.EqualsQuals["top_k"]; q != nil {
-		topK = q.GetInt64Value()
-		params.TopK = tpuf.Int(topK)
+		v := q.GetInt64Value()
+		topK = &v
+		params.TopK = tpuf.Int(v)
 	}
 
 	nsClient := client.Namespace(namespace)
 	res, err := nsClient.Recall(ctx, params)
 	if err != nil {
+		plugin.Logger(ctx).Error("turbopuffer_namespace_recall.listNamespaceRecall", "namespace", namespace, "region", region, "error", err)
 		return nil, err
 	}
 

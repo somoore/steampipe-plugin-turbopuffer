@@ -9,7 +9,7 @@ builds:
     binary: "{{ .ProjectName }}.plugin"
     flags: ["-tags=netgo"]
 archives:
-  - formats: [gzip]
+  - formats: [gz]
     name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
     files: ["none*"]
 checksum:

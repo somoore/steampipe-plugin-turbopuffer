@@ -29,7 +29,7 @@ type attributeRow struct {
 func tableTurbopufferNamespaceAttribute(_ context.Context) *plugin.Table {
 	return &plugin.Table{
 		Name:        "turbopuffer_namespace_attribute",
-		Description: "One row per attribute in each namespace schema: type, filterability, full-text/regex/glob/fuzzy indexing, auto-embedding and vector index flags.",
+		Description: "One row per attribute in each namespace schema: type, filterability, full-text/regex/glob/fuzzy indexing, and vector/sparse index flags.",
 		List: &plugin.ListConfig{
 			ParentHydrate: listNamespaces,
 			Hydrate:       listNamespaceAttributes,
@@ -75,6 +75,7 @@ func listNamespaceAttributes(ctx context.Context, d *plugin.QueryData, h *plugin
 	nsClient := client.Namespace(parent.ID)
 	meta, err := nsClient.Metadata(ctx, tpuf.NamespaceMetadataParams{})
 	if err != nil {
+		plugin.Logger(ctx).Error("turbopuffer_namespace_attribute.listNamespaceAttributes", "namespace", parent.ID, "region", parent.Region, "error", err)
 		return nil, err
 	}
 

@@ -3,6 +3,7 @@ package turbopuffer
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	tpuf "github.com/turbopuffer/turbopuffer-go/v2"
 	"github.com/turbot/steampipe-plugin-sdk/v5/grpc/proto"
@@ -76,8 +77,25 @@ func listDocuments(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateDa
 	}
 
 	nsClient := client.Namespace(namespace)
+
+	// Strip vector-typed attributes by schema, not just the "vector"
+	// name, so custom-named embeddings never surface.
+	meta, err := nsClient.Metadata(ctx, tpuf.NamespaceMetadataParams{})
+	if err != nil {
+		plugin.Logger(ctx).Error("turbopuffer_document.listDocuments", "namespace", namespace, "region", region, "error", err)
+		return nil, err
+	}
+	vectorAttr := map[string]bool{}
+	for name, attr := range meta.Schema {
+		t := string(attr.Type)
+		if strings.HasPrefix(t, "[") && (strings.Contains(t, "f16") || strings.Contains(t, "f32")) {
+			vectorAttr[name] = true
+		}
+	}
+
 	res, err := nsClient.Query(ctx, params)
 	if err != nil {
+		plugin.Logger(ctx).Error("turbopuffer_document.listDocuments", "namespace", namespace, "region", region, "error", err)
 		return nil, err
 	}
 
@@ -85,9 +103,11 @@ func listDocuments(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateDa
 	for _, row := range res.Rows {
 		attrs := make(map[string]interface{}, len(row))
 		for k, v := range row {
+			if k == "vector" || vectorAttr[k] {
+				continue
+			}
 			attrs[k] = v
 		}
-		delete(attrs, "vector")
 		d.StreamListItem(ctx, documentRow{
 			Namespace:  namespace,
 			Region:     region,
