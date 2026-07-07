@@ -2,7 +2,6 @@ package turbopuffer
 
 import (
 	"context"
-	"encoding/json"
 
 	tpuf "github.com/turbopuffer/turbopuffer-go/v2"
 	"github.com/turbot/steampipe-plugin-sdk/v5/grpc/proto"
@@ -22,24 +21,18 @@ func tableTurbopufferNamespace(_ context.Context) *plugin.Table {
 		Description: "Namespaces in the turbopuffer organization, with size, activity, schema and encryption posture from the metadata API.",
 		List: &plugin.ListConfig{
 			Hydrate: listNamespaces,
-			// Prefix pushdown: `where id like 'prod-%'` becomes ?prefix=prod-
-			// (~~ is the Postgres operator for LIKE).
+			// ~~ is the Postgres LIKE operator; pushed down as ?prefix=.
 			KeyColumns: []*plugin.KeyColumn{
 				{Name: "id", Require: plugin.Optional, Operators: []string{"=", "~~"}},
 			},
 		},
 		GetMatrixItemFunc: regionMatrix,
 		HydrateConfig: []plugin.HydrateConfig{
-			// Metadata is one GET per namespace; cap concurrency to stay
-			// polite. Steampipe caches results across controls in a run,
-			// so a 15-control benchmark still costs ~1 call per namespace.
+			// One metadata GET per namespace; cap concurrency.
 			{Func: getNamespaceMetadata, MaxConcurrency: 10},
 		},
 		Columns: []*plugin.Column{
-			// Key column first.
 			{Name: "id", Type: proto.ColumnType_STRING, Transform: transform.FromField("ID"), Description: "Namespace ID."},
-
-			// Remaining columns, alphabetical.
 			{Name: "approx_logical_bytes", Type: proto.ColumnType_INT, Hydrate: getNamespaceMetadata, Transform: transform.FromField("ApproxLogicalBytes"), Description: "Approximate logical size in bytes."},
 			{Name: "approx_row_count", Type: proto.ColumnType_INT, Hydrate: getNamespaceMetadata, Transform: transform.FromField("ApproxRowCount"), Description: "Approximate number of rows."},
 			{Name: "created_at", Type: proto.ColumnType_TIMESTAMP, Hydrate: getNamespaceMetadata, Transform: transform.FromField("CreatedAt"), Description: "When the namespace was created."},
@@ -51,8 +44,6 @@ func tableTurbopufferNamespace(_ context.Context) *plugin.Table {
 			{Name: "region", Type: proto.ColumnType_STRING, Transform: transform.FromField("Region"), Description: "turbopuffer region hosting the namespace (e.g. gcp-us-central1)."},
 			{Name: "schema", Type: proto.ColumnType_JSON, Hydrate: getNamespaceMetadata, Transform: transform.FromField("Schema"), Description: "Full attribute schema as JSON (attribute -> config)."},
 			{Name: "updated_at", Type: proto.ColumnType_TIMESTAMP, Hydrate: getNamespaceMetadata, Transform: transform.FromField("UpdatedAt"), Description: "Last write to the namespace. The staleness signal."},
-
-			// Steampipe standard columns last.
 			{Name: "akas", Type: proto.ColumnType_JSON, Transform: transform.FromValue().Transform(namespaceAkas), Description: "Array of globally unique identifiers (region/id) for the namespace."},
 			{Name: "title", Type: proto.ColumnType_STRING, Transform: transform.FromField("ID"), Description: "Title of the resource."},
 		},
@@ -61,8 +52,7 @@ func tableTurbopufferNamespace(_ context.Context) *plugin.Table {
 
 //// LIST HYDRATE FUNCTIONS
 
-// listNamespaces streams every namespace in the current matrix region,
-// pushing a LIKE/= qual on id down as an API-side prefix filter.
+// listNamespaces streams every namespace in the current region.
 func listNamespaces(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) (interface{}, error) {
 	region := regionFromMatrix(ctx)
 	client, err := getClient(ctx, d, region)
@@ -71,7 +61,7 @@ func listNamespaces(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateD
 	}
 
 	params := tpuf.NamespacesParams{PageSize: tpuf.Int(500)}
-	// Push a `like 'foo%'` / `= 'foo'` qual down as an API-side prefix filter.
+	// Push id qual down as an API-side prefix filter.
 	if q := d.EqualsQualString("id"); q != "" {
 		params.Prefix = tpuf.String(q)
 	} else if quals := d.Quals["id"]; quals != nil {
@@ -102,8 +92,7 @@ func listNamespaces(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateD
 
 //// HYDRATE FUNCTIONS
 
-// getNamespaceMetadata hydrates a namespace row with its metadata API response
-// (size, timestamps, encryption, schema).
+// getNamespaceMetadata hydrates a namespace row from the metadata API.
 func getNamespaceMetadata(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
 	ns := h.Item.(namespaceRow)
 	client, err := getClient(ctx, d, ns.Region)
@@ -119,8 +108,7 @@ func getNamespaceMetadata(ctx context.Context, d *plugin.QueryData, h *plugin.Hy
 	return meta, nil
 }
 
-// likeToPrefix converts a SQL LIKE pattern of the form 'abc%' (no other
-// wildcards) into an API prefix. Anything else is left for Postgres to filter.
+// likeToPrefix turns 'abc%' into prefix "abc"; other patterns stay in Postgres.
 func likeToPrefix(pattern string) (string, bool) {
 	if pattern == "" {
 		return "", false
@@ -143,11 +131,8 @@ func containsWildcard(s string) bool {
 
 //// TRANSFORM FUNCTIONS
 
-// namespaceAkas builds the standard akas array: one region-scoped identifier.
+// namespaceAkas builds the akas array: region/id.
 func namespaceAkas(_ context.Context, td *transform.TransformData) (interface{}, error) {
 	ns := td.HydrateItem.(namespaceRow)
 	return []string{ns.Region + "/" + ns.ID}, nil
 }
-
-// ensure json import is retained for future raw passthroughs
-var _ = json.Marshal

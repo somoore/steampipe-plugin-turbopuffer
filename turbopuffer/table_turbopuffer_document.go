@@ -10,10 +10,7 @@ import (
 	"github.com/turbot/steampipe-plugin-sdk/v5/plugin/transform"
 )
 
-// documentRow is a thin projection of a queried row: id + attributes.
-// Vectors are always excluded — this table exists for governance lookups
-// (canary checks, targeted sampling), not for bulk export. Embeddings can be
-// inverted to recover source text, so we deliberately never surface them.
+// documentRow is a queried row: id + attributes, vector always stripped.
 type documentRow struct {
 	Namespace  string
 	Region     string
@@ -34,29 +31,22 @@ func tableTurbopufferDocument(_ context.Context) *plugin.Table {
 		},
 		GetMatrixItemFunc: regionMatrix,
 		Columns: []*plugin.Column{
-			// Key columns first.
 			{Name: "namespace", Type: proto.ColumnType_STRING, Transform: transform.FromField("Namespace"), Description: "Namespace ID (required qual)."},
 			{Name: "id", Type: proto.ColumnType_STRING, Transform: transform.FromField("ID"), Description: "Document ID."},
-
-			// Remaining columns, alphabetical.
 			{Name: "attributes", Type: proto.ColumnType_JSON, Transform: transform.FromField("Attributes"), Description: "Document attributes as JSON. Vectors are never included."},
 			{Name: "region", Type: proto.ColumnType_STRING, Transform: transform.FromField("Region"), Description: "turbopuffer region."},
-
-			// Steampipe standard columns last.
 			{Name: "akas", Type: proto.ColumnType_JSON, Transform: transform.FromValue().Transform(documentAkas), Description: "Array of globally unique identifiers (region/namespace/id) for the document."},
 			{Name: "title", Type: proto.ColumnType_STRING, Transform: transform.FromField("ID"), Description: "Title of the resource."},
 		},
 	}
 }
 
-// sampleCap bounds how many documents a single scan will pull when no id qual
-// or LIMIT is supplied. Governance sampling should be cheap and polite.
+// sampleCap bounds a scan when no id qual or LIMIT is supplied.
 const sampleCap int64 = 100
 
 //// LIST HYDRATE FUNCTIONS
 
-// listDocuments runs a bounded, deterministic query within one namespace and
-// streams id + attributes, always stripping the vector.
+// listDocuments runs a bounded query within one namespace.
 func listDocuments(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) (interface{}, error) {
 	region := regionFromMatrix(ctx)
 	namespace := d.EqualsQualString("namespace")
@@ -75,11 +65,9 @@ func listDocuments(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateDa
 	}
 
 	params := tpuf.NamespaceQueryParams{
-		TopK: tpuf.Int(topK),
-		// Ascending id order = deterministic, index-friendly scan.
-		RankBy: tpuf.NewRankByAttribute("id", tpuf.RankByAttributeOrderAsc),
-		// Include all attributes; we strip the vector in Go below.
-		// (The API rejects include_attributes + exclude_attributes together.)
+		TopK:   tpuf.Int(topK),
+		RankBy: tpuf.NewRankByAttribute("id", tpuf.RankByAttributeOrderAsc), // deterministic scan
+		// Include all; vector stripped in Go (API rejects include+exclude).
 		IncludeAttributes: tpuf.IncludeAttributesParam{Bool: tpuf.Bool(true)},
 	}
 	if id := d.EqualsQualString("id"); id != "" {
@@ -93,7 +81,7 @@ func listDocuments(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateDa
 		return nil, err
 	}
 
-	// tpuf.Row is a map[string]any: `id` is a key, vectors live under "vector".
+	// tpuf.Row is a map[string]any; `id` and `vector` are keys.
 	for _, row := range res.Rows {
 		attrs := make(map[string]interface{}, len(row))
 		for k, v := range row {
@@ -115,7 +103,7 @@ func listDocuments(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateDa
 
 //// TRANSFORM FUNCTIONS
 
-// documentAkas builds the standard akas array: region/namespace/id.
+// documentAkas builds the akas array: region/namespace/id.
 func documentAkas(_ context.Context, td *transform.TransformData) (interface{}, error) {
 	r := td.HydrateItem.(documentRow)
 	return []string{r.Region + "/" + r.Namespace + "/" + r.ID}, nil

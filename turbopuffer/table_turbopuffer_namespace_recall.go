@@ -10,11 +10,7 @@ import (
 	"github.com/turbot/steampipe-plugin-sdk/v5/plugin/transform"
 )
 
-// recallRow reports the result of a recall evaluation: how closely the ANN
-// index approximates ground-truth exhaustive search. Silent recall
-// degradation is an integrity problem — for a security product it means
-// "your retrieval is quietly wrong" — so we expose it as a first-class,
-// deliberately-invoked signal.
+// recallRow reports how closely ANN search approximates exhaustive.
 type recallRow struct {
 	Namespace          string
 	Region             string
@@ -39,19 +35,15 @@ func tableTurbopufferNamespaceRecall(_ context.Context) *plugin.Table {
 		},
 		GetMatrixItemFunc: regionMatrix,
 		Columns: []*plugin.Column{
-			// Key columns first.
 			{Name: "namespace", Type: proto.ColumnType_STRING, Transform: transform.FromField("Namespace"), Description: "Namespace ID (required qual)."},
 			{Name: "queries", Type: proto.ColumnType_INT, Transform: transform.FromField("Queries"), Description: "Number of evaluation searches run (qual; server default if unset)."},
 			{Name: "top_k", Type: proto.ColumnType_INT, Transform: transform.FromField("TopK"), Description: "Nearest neighbors evaluated per search (qual; server default if unset)."},
-
-			// Remaining columns, alphabetical.
 			{Name: "avg_ann_count", Type: proto.ColumnType_DOUBLE, Transform: transform.FromField("AvgAnnCount"), Description: "Average documents returned by the ANN searches."},
 			{Name: "avg_exhaustive_count", Type: proto.ColumnType_DOUBLE, Transform: transform.FromField("AvgExhaustiveCount"), Description: "Average documents returned by the exhaustive searches."},
 			{Name: "avg_recall", Type: proto.ColumnType_DOUBLE, Transform: transform.FromField("AvgRecall"), Description: "Average recall of ANN search vs exhaustive ground truth (1.0 = perfect)."},
 			{Name: "region", Type: proto.ColumnType_STRING, Transform: transform.FromField("Region"), Description: "turbopuffer region."},
 
-			// Steampipe standard column. Recall is an on-demand evaluation, not
-			// an API resource, so akas/tags do not apply.
+			// No akas: recall is an evaluation, not an API resource.
 			{Name: "title", Type: proto.ColumnType_STRING, Transform: transform.FromField("Namespace"), Description: "Title of the resource."},
 		},
 	}
@@ -59,8 +51,7 @@ func tableTurbopufferNamespaceRecall(_ context.Context) *plugin.Table {
 
 //// LIST HYDRATE FUNCTIONS
 
-// listNamespaceRecall runs one on-demand recall evaluation against a namespace
-// and streams a single result row.
+// listNamespaceRecall runs one recall evaluation and streams a row.
 func listNamespaceRecall(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) (interface{}, error) {
 	region := regionFromMatrix(ctx)
 	namespace := d.EqualsQualString("namespace")

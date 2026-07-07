@@ -10,8 +10,7 @@ import (
 	"github.com/turbot/steampipe-plugin-sdk/v5/plugin/transform"
 )
 
-// attributeRow flattens the namespace schema map into one row per attribute,
-// which is what makes SQL controls over schema shape pleasant to write.
+// attributeRow is one flattened namespace schema attribute.
 type attributeRow struct {
 	Namespace         string
 	Region            string
@@ -40,10 +39,7 @@ func tableTurbopufferNamespaceAttribute(_ context.Context) *plugin.Table {
 		},
 		GetMatrixItemFunc: regionMatrix,
 		Columns: []*plugin.Column{
-			// Key column first.
 			{Name: "namespace", Type: proto.ColumnType_STRING, Transform: transform.FromField("Namespace"), Description: "Namespace ID."},
-
-			// Remaining columns, alphabetical.
 			{Name: "filterable", Type: proto.ColumnType_BOOL, Transform: transform.FromField("Filterable"), Description: "Whether the attribute can be used in filters. ACL attributes MUST be filterable to enforce authorization."},
 			{Name: "full_text_config", Type: proto.ColumnType_JSON, Transform: transform.FromField("FullTextConfig"), Description: "Full-text search configuration, if enabled."},
 			{Name: "full_text_search", Type: proto.ColumnType_BOOL, Transform: transform.FromField("FullTextSearch"), Description: "Whether BM25 full-text search is enabled on the attribute."},
@@ -55,8 +51,6 @@ func tableTurbopufferNamespaceAttribute(_ context.Context) *plugin.Table {
 			{Name: "sparse_vector_index", Type: proto.ColumnType_BOOL, Transform: transform.FromField("SparseVectorIndex"), Description: "Whether a sparse kNN index is configured for the attribute."},
 			{Name: "type", Type: proto.ColumnType_STRING, Transform: transform.FromField("Type"), Description: "Attribute type (string, int, uuid, datetime, [DIMS]f32 vector, etc.)."},
 			{Name: "vector_index", Type: proto.ColumnType_BOOL, Transform: transform.FromField("VectorIndex"), Description: "Whether an ANN vector index is configured for the attribute."},
-
-			// Steampipe standard columns last.
 			{Name: "akas", Type: proto.ColumnType_JSON, Transform: transform.FromValue().Transform(attributeAkas), Description: "Array of globally unique identifiers (region/namespace/name) for the attribute."},
 			{Name: "title", Type: proto.ColumnType_STRING, Transform: transform.FromField("Name"), Description: "Title of the resource."},
 		},
@@ -65,12 +59,11 @@ func tableTurbopufferNamespaceAttribute(_ context.Context) *plugin.Table {
 
 //// LIST HYDRATE FUNCTIONS
 
-// listNamespaceAttributes flattens the parent namespace's schema map into one
-// row per attribute.
+// listNamespaceAttributes flattens the parent namespace's schema.
 func listNamespaceAttributes(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
 	parent := h.Item.(namespaceRow)
 
-	// Optional qual: only expand the requested namespace.
+	// Only expand the requested namespace, if qualed.
 	if q := d.EqualsQualString("namespace"); q != "" && q != parent.ID {
 		return nil, nil
 	}
@@ -85,7 +78,7 @@ func listNamespaceAttributes(ctx context.Context, d *plugin.QueryData, h *plugin
 		return nil, err
 	}
 
-	// Deterministic ordering makes control output stable across runs.
+	// Sort for stable output across runs.
 	names := make([]string, 0, len(meta.Schema))
 	for name := range meta.Schema {
 		names = append(names, name)
@@ -117,7 +110,7 @@ func listNamespaceAttributes(ctx context.Context, d *plugin.QueryData, h *plugin
 
 //// TRANSFORM FUNCTIONS
 
-// attributeAkas builds the standard akas array: region/namespace/name.
+// attributeAkas builds the akas array: region/namespace/name.
 func attributeAkas(_ context.Context, td *transform.TransformData) (interface{}, error) {
 	a := td.HydrateItem.(attributeRow)
 	return []string{a.Region + "/" + a.Namespace + "/" + a.Name}, nil

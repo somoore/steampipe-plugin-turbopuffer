@@ -10,22 +10,11 @@ import (
 	"github.com/turbot/steampipe-plugin-sdk/v5/plugin"
 )
 
-// Endpoints used (verified against the official Go client, turbopuffer-go/v2):
-//
-//	GET  /v1/namespaces                     -> paginated {id} summaries
-//	GET  /v2/namespaces/:ns/metadata        -> approx_row_count, approx_logical_bytes,
-//	                                           created_at, updated_at,
-//	                                           encryption{mode,key_name},
-//	                                           schema{attr -> config}, sharding, pinning
-//	POST /v2/namespaces/:ns/query           -> rows (used by turbopuffer_document)
-//
-// Base URL pattern: https://<region>.turbopuffer.com/
 const defaultRegion = "gcp-us-central1"
 
 //// CLIENT
 
-// getClient returns a region-scoped turbopuffer client, cached per
-// connection+region so concurrent hydrates share transports.
+// getClient returns a region-scoped client, cached per region.
 func getClient(ctx context.Context, d *plugin.QueryData, region string) (*tpuf.Client, error) {
 	cacheKey := "turbopuffer-client-" + region
 	if cached, ok := d.ConnectionManager.Cache.Get(cacheKey); ok {
@@ -43,7 +32,7 @@ func getClient(ctx context.Context, d *plugin.QueryData, region string) (*tpuf.C
 
 	client := tpuf.NewClient(
 		option.WithAPIKey(apiKey),
-		option.WithRegion(region), // substituted into https://REGION.turbopuffer.com/
+		option.WithRegion(region),
 	)
 
 	d.ConnectionManager.Cache.Set(cacheKey, &client)
@@ -52,8 +41,7 @@ func getClient(ctx context.Context, d *plugin.QueryData, region string) (*tpuf.C
 
 //// ERROR HANDLING
 
-// isNotFoundError treats 404s as ignorable: a namespace deleted between the
-// list call and its metadata hydrate should drop the row, not fail the scan.
+// isNotFoundError reports whether err is a 404 (an ignorable skip).
 func isNotFoundError(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData, err error) bool {
 	var apierr *tpuf.Error
 	if errors.As(err, &apierr) {

@@ -8,11 +8,7 @@ import (
 	"github.com/turbot/steampipe-plugin-sdk/v5/plugin/transform"
 )
 
-// turbopuffer has no public list-regions endpoint, so this table reflects the
-// regions configured on the connection — which is exactly what residency
-// audits need: "these are the regions this org can reach". Keep the
-// connection's `regions` list equal to ALL regions your API key can write to,
-// or shadow regions stay invisible to every control.
+// regionRow is a configured region and its endpoint (no list-regions API).
 type regionRow struct {
 	Region   string
 	Endpoint string
@@ -26,12 +22,10 @@ func tableTurbopufferRegion(_ context.Context) *plugin.Table {
 			Hydrate: listRegions,
 		},
 		Columns: []*plugin.Column{
-			// No List key columns, so all non-standard columns are alphabetical.
 			{Name: "endpoint", Type: proto.ColumnType_STRING, Transform: transform.FromField("Endpoint"), Description: "Region API endpoint."},
 			{Name: "region", Type: proto.ColumnType_STRING, Transform: transform.FromField("Region"), Description: "Region identifier, e.g. gcp-us-central1."},
 
-			// Steampipe standard column. Region is a config echo, not an API
-			// resource, so akas/tags do not apply.
+			// No akas: region is a config echo, not an API resource.
 			{Name: "title", Type: proto.ColumnType_STRING, Transform: transform.FromField("Region"), Description: "Title of the resource."},
 		},
 	}
