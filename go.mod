@@ -5,8 +5,8 @@ go 1.26.0
 require (
 	// Official turbopuffer client — endpoint paths and response types in this
 	// plugin were written against this SDK's verified surface.
-	github.com/turbopuffer/turbopuffer-go/v2 v2.0.0 // run: go get github.com/turbopuffer/turbopuffer-go/v2@latest
-	github.com/turbot/steampipe-plugin-sdk/v5 v5.11.5 // run: go get github.com/turbot/steampipe-plugin-sdk/v5@latest
+	github.com/turbopuffer/turbopuffer-go/v2 v2.5.0 // run: go get github.com/turbopuffer/turbopuffer-go/v2@latest
+	github.com/turbot/steampipe-plugin-sdk/v5 v5.14.1 // run: go get github.com/turbot/steampipe-plugin-sdk/v5@latest
 )
 
 require (
