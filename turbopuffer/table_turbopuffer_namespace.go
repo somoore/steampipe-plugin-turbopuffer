@@ -43,6 +43,7 @@ func tableTurbopufferNamespace(_ context.Context) *plugin.Table {
 			{Name: "pinning", Type: proto.ColumnType_JSON, Hydrate: getNamespaceMetadata, Transform: transform.FromField("Pinning"), Description: "Pinning configuration and status, if any."},
 			{Name: "region", Type: proto.ColumnType_STRING, Transform: transform.FromField("Region"), Description: "turbopuffer region hosting the namespace (e.g. gcp-us-central1)."},
 			{Name: "schema", Type: proto.ColumnType_JSON, Hydrate: getNamespaceMetadata, Transform: transform.FromField("Schema"), Description: "Full attribute schema as JSON (attribute -> config)."},
+			{Name: "sharding_num_shards", Type: proto.ColumnType_INT, Hydrate: getNamespaceMetadata, Transform: transform.FromField("Sharding.NumShards"), Description: "Number of shards the namespace is partitioned into, if sharding is configured."},
 			{Name: "updated_at", Type: proto.ColumnType_TIMESTAMP, Hydrate: getNamespaceMetadata, Transform: transform.FromField("UpdatedAt"), Description: "Last write to the namespace. The staleness signal."},
 			{Name: "akas", Type: proto.ColumnType_JSON, Transform: transform.FromValue().Transform(namespaceAkas), Description: "Array of globally unique identifiers (region/id) for the namespace."},
 			{Name: "title", Type: proto.ColumnType_STRING, Transform: transform.FromField("ID"), Description: "Title of the resource."},
