@@ -35,6 +35,9 @@ $RECYCLE.BIN/
 *.out
 vendor/
 
+# goreleaser output
+dist/
+
 # Steampipe / Powerpipe
 .steampipe/
 .powerpipe/
