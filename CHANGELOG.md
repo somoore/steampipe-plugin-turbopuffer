@@ -22,8 +22,9 @@ Changes from the Steampipe Hub review
   the copy inside the JSON round-tripped through float64 downstream and
   could corrupt integer ids above 2^53; the `id` column is the exact value.
 - Standardized the `region` column description across all tables.
-- Narrowed the Hub category to `ai` and added `engines` / `og_image` front
-  matter to `docs/index.md`.
+- Narrowed the Hub category to `saas` (turbopuffer is a hosted search
+  service, not an AI company) and added `engines` / `og_image` front matter
+  to `docs/index.md`.
 - Documented the 100-document scan cap on `turbopuffer_document`.
 
 ## v0.0.1 - 2026-07-09

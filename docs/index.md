@@ -1,6 +1,6 @@
 ---
 organization: somoore
-category: ["ai"]
+category: ["saas"]
 icon_url: "/images/plugins/somoore/turbopuffer.svg"
 brand_color: "#FB915F"
 display_name: "turbopuffer"
