@@ -41,9 +41,7 @@ func tableTurbopufferNamespaceRecall(_ context.Context) *plugin.Table {
 			{Name: "avg_ann_count", Type: proto.ColumnType_DOUBLE, Transform: transform.FromField("AvgAnnCount"), Description: "Average documents returned by the ANN searches."},
 			{Name: "avg_exhaustive_count", Type: proto.ColumnType_DOUBLE, Transform: transform.FromField("AvgExhaustiveCount"), Description: "Average documents returned by the exhaustive searches."},
 			{Name: "avg_recall", Type: proto.ColumnType_DOUBLE, Transform: transform.FromField("AvgRecall"), Description: "Average recall of ANN search vs exhaustive ground truth (1.0 = perfect)."},
-			{Name: "region", Type: proto.ColumnType_STRING, Transform: transform.FromField("Region"), Description: "turbopuffer region."},
-
-			// No akas: recall is an evaluation, not an API resource.
+			{Name: "region", Type: proto.ColumnType_STRING, Transform: transform.FromField("Region"), Description: "turbopuffer region (e.g. gcp-us-central1)."},
 			{Name: "title", Type: proto.ColumnType_STRING, Transform: transform.FromField("Namespace"), Description: "Title of the resource."},
 		},
 	}

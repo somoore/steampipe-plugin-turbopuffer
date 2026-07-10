@@ -23,9 +23,7 @@ func tableTurbopufferRegion(_ context.Context) *plugin.Table {
 		},
 		Columns: []*plugin.Column{
 			{Name: "endpoint", Type: proto.ColumnType_STRING, Transform: transform.FromField("Endpoint"), Description: "Region API endpoint."},
-			{Name: "region", Type: proto.ColumnType_STRING, Transform: transform.FromField("Region"), Description: "Region identifier, e.g. gcp-us-central1."},
-
-			// No akas: region is a config echo, not an API resource.
+			{Name: "region", Type: proto.ColumnType_STRING, Transform: transform.FromField("Region"), Description: "turbopuffer region (e.g. gcp-us-central1)."},
 			{Name: "title", Type: proto.ColumnType_STRING, Transform: transform.FromField("Region"), Description: "Title of the resource."},
 		},
 	}

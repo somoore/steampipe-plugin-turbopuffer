@@ -29,16 +29,10 @@ import (
 // snakeCase matches lower snake_case identifiers (table and column names).
 var snakeCase = regexp.MustCompile(`^[a-z][a-z0-9_]*$`)
 
-// resourceTables are tables that represent an API resource and therefore MUST
-// carry the standard title + akas columns. region (config echo) and recall
-// (on-demand evaluation) are deliberately excluded — see CLAUDE.md.
-var resourceTables = map[string]bool{
-	"turbopuffer_namespace":           true,
-	"turbopuffer_namespace_attribute": true,
-	"turbopuffer_document":            true,
-}
-
 // standardColumns are ordered-last per the standards; used for ordering checks.
+// akas/tags are listed for ordering robustness even though no table currently
+// carries them (akas were dropped per Hub review — not a cloud plugin; tags
+// don't exist in the turbopuffer API).
 var standardColumns = map[string]bool{
 	"title": true,
 	"akas":  true,
@@ -104,14 +98,6 @@ func TestStandardColumnsPresent(t *testing.T) {
 		names := columnNameSet(table)
 		if _, ok := names["title"]; !ok {
 			t.Errorf("table %s is missing the standard column 'title'", tableName)
-		}
-		if resourceTables[tableName] {
-			if _, ok := names["akas"]; !ok {
-				t.Errorf("resource table %s is missing the standard column 'akas'", tableName)
-			}
-			if c := findColumn(table, "akas"); c != nil && c.Type != proto.ColumnType_JSON {
-				t.Errorf("%s.akas must be ColumnType_JSON", tableName)
-			}
 		}
 		if c := findColumn(table, "title"); c != nil && c.Type != proto.ColumnType_STRING {
 			t.Errorf("%s.title must be ColumnType_STRING", tableName)

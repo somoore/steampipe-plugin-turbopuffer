@@ -4,6 +4,28 @@ All notable changes to this plugin are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+Changes from the Steampipe Hub review
+([#13](https://github.com/somoore/steampipe-plugin-turbopuffer/issues/13)):
+
+### Changed
+
+- Dropped the `akas` column from `turbopuffer_namespace`,
+  `turbopuffer_namespace_attribute` and `turbopuffer_document` — an aka is a
+  cloud-plugin convention (ARNs and the like) with no turbopuffer equivalent.
+- `turbopuffer_document.id` now renders integer document ids explicitly
+  (turbopuffer ids are `string | int64`), so they can never appear in
+  scientific notation or lose precision. Verified live against ids beyond
+  2^53.
+- `turbopuffer_document.attributes` no longer duplicates the document id —
+  the copy inside the JSON round-tripped through float64 downstream and
+  could corrupt integer ids above 2^53; the `id` column is the exact value.
+- Standardized the `region` column description across all tables.
+- Narrowed the Hub category to `ai` and added `engines` / `og_image` front
+  matter to `docs/index.md`.
+- Documented the 100-document scan cap on `turbopuffer_document`.
+
 ## v0.0.1 - 2026-07-09
 
 First release. A read-only, region-scoped Steampipe plugin that exposes a

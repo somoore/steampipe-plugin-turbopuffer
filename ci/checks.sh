@@ -82,8 +82,7 @@ fi
 #### 4. Duplicative code (advisory) ############################################
 say "duplicative-code advisory"
 # No heavyweight tool: flag identical normalized function bodies across the Go
-# package. Near-dupes by design (the *Akas transforms) are expected; this is a
-# nudge, not a gate.
+# package. This is a nudge, not a gate.
 dup=$(awk '
   /^func / {inbody=1; body=""; name=$0; next}
   inbody && /^}/ {

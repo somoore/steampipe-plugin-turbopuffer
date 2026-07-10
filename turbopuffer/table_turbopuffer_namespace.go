@@ -41,11 +41,10 @@ func tableTurbopufferNamespace(_ context.Context) *plugin.Table {
 			{Name: "index_status", Type: proto.ColumnType_STRING, Hydrate: getNamespaceMetadata, Transform: transform.FromField("Index.Status"), Description: "Index status; 'up-to-date' or 'updating' when writes are not yet fully indexed."},
 			{Name: "index_unindexed_bytes", Type: proto.ColumnType_INT, Hydrate: getNamespaceMetadata, Transform: transform.FromField("Index.UnindexedBytes"), Description: "Bytes written to the WAL but not yet indexed; nonzero means the index is lagging recent writes."},
 			{Name: "pinning", Type: proto.ColumnType_JSON, Hydrate: getNamespaceMetadata, Transform: transform.FromField("Pinning"), Description: "Pinning configuration and status, if any."},
-			{Name: "region", Type: proto.ColumnType_STRING, Transform: transform.FromField("Region"), Description: "turbopuffer region hosting the namespace (e.g. gcp-us-central1)."},
+			{Name: "region", Type: proto.ColumnType_STRING, Transform: transform.FromField("Region"), Description: "turbopuffer region (e.g. gcp-us-central1)."},
 			{Name: "schema", Type: proto.ColumnType_JSON, Hydrate: getNamespaceMetadata, Transform: transform.FromField("Schema"), Description: "Full attribute schema as JSON (attribute -> config)."},
 			{Name: "sharding_num_shards", Type: proto.ColumnType_INT, Hydrate: getNamespaceMetadata, Transform: transform.FromField("Sharding.NumShards"), Description: "Number of shards the namespace is partitioned into, if sharding is configured."},
 			{Name: "updated_at", Type: proto.ColumnType_TIMESTAMP, Hydrate: getNamespaceMetadata, Transform: transform.FromField("UpdatedAt"), Description: "Last write to the namespace. The staleness signal."},
-			{Name: "akas", Type: proto.ColumnType_JSON, Transform: transform.FromValue().Transform(namespaceAkas), Description: "Array of globally unique identifiers (region/id) for the namespace."},
 			{Name: "title", Type: proto.ColumnType_STRING, Transform: transform.FromField("ID"), Description: "Title of the resource."},
 		},
 	}
@@ -62,7 +61,10 @@ func listNamespaces(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateD
 	}
 
 	params := tpuf.NamespacesParams{PageSize: tpuf.Int(500)}
-	// Push id qual down as an API-side prefix filter.
+	// The list API's only server-side filter is ?prefix=. For an `id =` qual
+	// the exact id is a valid prefix of itself, so pushing it narrows the scan
+	// server-side; the SDK still post-filters rows to exact equality, so
+	// results are always exact. LIKE 'abc%' quals push the same way.
 	if q := d.EqualsQualString("id"); q != "" {
 		params.Prefix = tpuf.String(q)
 	} else if quals := d.Quals["id"]; quals != nil {
@@ -130,12 +132,4 @@ func containsWildcard(s string) bool {
 		}
 	}
 	return false
-}
-
-//// TRANSFORM FUNCTIONS
-
-// namespaceAkas builds the akas array: region/id.
-func namespaceAkas(_ context.Context, td *transform.TransformData) (interface{}, error) {
-	ns := td.HydrateItem.(namespaceRow)
-	return []string{ns.Region + "/" + ns.ID}, nil
 }

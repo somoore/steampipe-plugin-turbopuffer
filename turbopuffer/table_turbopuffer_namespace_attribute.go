@@ -47,11 +47,10 @@ func tableTurbopufferNamespaceAttribute(_ context.Context) *plugin.Table {
 			{Name: "glob", Type: proto.ColumnType_BOOL, Transform: transform.FromField("Glob"), Description: "Whether glob filters are enabled on the attribute."},
 			{Name: "name", Type: proto.ColumnType_STRING, Transform: transform.FromField("Name"), Description: "Attribute name."},
 			{Name: "regex", Type: proto.ColumnType_BOOL, Transform: transform.FromField("Regex"), Description: "Whether regex filters are enabled on the attribute."},
-			{Name: "region", Type: proto.ColumnType_STRING, Transform: transform.FromField("Region"), Description: "turbopuffer region."},
+			{Name: "region", Type: proto.ColumnType_STRING, Transform: transform.FromField("Region"), Description: "turbopuffer region (e.g. gcp-us-central1)."},
 			{Name: "sparse_vector_index", Type: proto.ColumnType_BOOL, Transform: transform.FromField("SparseVectorIndex"), Description: "Whether a sparse kNN index is configured for the attribute."},
 			{Name: "type", Type: proto.ColumnType_STRING, Transform: transform.FromField("Type"), Description: "Attribute type (string, int, uuid, datetime, [DIMS]f32 vector, etc.)."},
 			{Name: "vector_index", Type: proto.ColumnType_BOOL, Transform: transform.FromField("VectorIndex"), Description: "Whether an ANN vector index is configured for the attribute."},
-			{Name: "akas", Type: proto.ColumnType_JSON, Transform: transform.FromValue().Transform(attributeAkas), Description: "Array of globally unique identifiers (region/namespace/name) for the attribute."},
 			{Name: "title", Type: proto.ColumnType_STRING, Transform: transform.FromField("Name"), Description: "Title of the resource."},
 		},
 	}
@@ -107,12 +106,4 @@ func listNamespaceAttributes(ctx context.Context, d *plugin.QueryData, h *plugin
 		}
 	}
 	return nil, nil
-}
-
-//// TRANSFORM FUNCTIONS
-
-// attributeAkas builds the akas array: region/namespace/name.
-func attributeAkas(_ context.Context, td *transform.TransformData) (interface{}, error) {
-	a := td.HydrateItem.(attributeRow)
-	return []string{a.Region + "/" + a.Namespace + "/" + a.Name}, nil
 }

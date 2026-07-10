@@ -2,6 +2,8 @@
 
 Targeted document lookups within one namespace. **Requires a `namespace` qual**; supports `id` equality pushdown. Vectors are never returned — embeddings are invertible, and this table exists for governance lookups (canaries, small samples), not export.
 
+**Note:** Without an `id` qual, a scan returns at most 100 documents per namespace (or your `limit`, if smaller). This cap is deliberate — the table samples, it does not export.
+
 ## Examples
 
 ### Basic info

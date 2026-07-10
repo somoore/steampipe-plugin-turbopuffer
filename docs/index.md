@@ -1,12 +1,14 @@
 ---
 organization: somoore
-category: ["ai", "saas", "security"]
+category: ["ai"]
 icon_url: "/images/plugins/somoore/turbopuffer.svg"
 brand_color: "#FB915F"
 display_name: "turbopuffer"
 short_name: "turbopuffer"
 description: "Steampipe plugin to query turbopuffer namespaces, schemas, documents and recall — the inventory layer for vector-search security posture."
 og_description: "Query turbopuffer with SQL! Open source CLI. No DB required."
+og_image: "/images/plugins/somoore/turbopuffer-social-graphic.png"
+engines: ["steampipe", "sqlite", "postgres", "export"]
 ---
 
 # turbopuffer + Steampipe
