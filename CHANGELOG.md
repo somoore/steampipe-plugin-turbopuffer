@@ -4,6 +4,17 @@ All notable changes to this plugin are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v0.0.3 - 2026-07-13
+
+### Added
+
+- `turbopuffer_namespace.prefix` — an explicit optional key column that pushes
+  down to the list API's `?prefix=` filter (e.g. `where prefix = 'prod-'`),
+  mirroring the `query` column pattern in `aws_resource_explorer_search`.
+  Requested in Hub review
+  ([#13](https://github.com/somoore/steampipe-plugin-turbopuffer/issues/13)).
+  The existing `id =` / `id like 'abc%'` pushdown optimization is unchanged.
+
 ## v0.0.2 - 2026-07-10
 
 Changes from the Steampipe Hub review

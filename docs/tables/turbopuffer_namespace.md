@@ -16,6 +16,22 @@ from
   turbopuffer_namespace;
 ```
 
+### List namespaces matching a prefix
+
+The `prefix` qual pushes down to the API as a server-side filter, so only
+matching namespaces are scanned.
+
+```sql
+select
+  id,
+  region,
+  approx_row_count
+from
+  turbopuffer_namespace
+where
+  prefix = 'prod-';
+```
+
 ### List production namespaces without customer-managed encryption
 
 ```sql

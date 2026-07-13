@@ -24,6 +24,9 @@ func tableTurbopufferNamespace(_ context.Context) *plugin.Table {
 			// ~~ is the Postgres LIKE operator; pushed down as ?prefix=.
 			KeyColumns: []*plugin.KeyColumn{
 				{Name: "id", Require: plugin.Optional, Operators: []string{"=", "~~"}},
+				// CacheMatch exact: prefix is echoed from the qual, so a cached
+				// unqualed scan (prefix=NULL) must never serve a qualed query.
+				{Name: "prefix", Require: plugin.Optional, CacheMatch: "exact"},
 			},
 		},
 		GetMatrixItemFunc: regionMatrix,
@@ -33,6 +36,7 @@ func tableTurbopufferNamespace(_ context.Context) *plugin.Table {
 		},
 		Columns: []*plugin.Column{
 			{Name: "id", Type: proto.ColumnType_STRING, Transform: transform.FromField("ID"), Description: "Namespace ID."},
+			{Name: "prefix", Type: proto.ColumnType_STRING, Transform: transform.FromQual("prefix"), Description: "Server-side namespace ID prefix filter for the list call, e.g. where prefix = 'prod-'."},
 			{Name: "approx_logical_bytes", Type: proto.ColumnType_INT, Hydrate: getNamespaceMetadata, Transform: transform.FromField("ApproxLogicalBytes"), Description: "Approximate logical size in bytes."},
 			{Name: "approx_row_count", Type: proto.ColumnType_INT, Hydrate: getNamespaceMetadata, Transform: transform.FromField("ApproxRowCount"), Description: "Approximate number of rows."},
 			{Name: "created_at", Type: proto.ColumnType_TIMESTAMP, Hydrate: getNamespaceMetadata, Transform: transform.FromField("CreatedAt"), Description: "When the namespace was created."},
@@ -61,11 +65,14 @@ func listNamespaces(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateD
 	}
 
 	params := tpuf.NamespacesParams{PageSize: tpuf.Int(500)}
-	// The list API's only server-side filter is ?prefix=. For an `id =` qual
-	// the exact id is a valid prefix of itself, so pushing it narrows the scan
-	// server-side; the SDK still post-filters rows to exact equality, so
-	// results are always exact. LIKE 'abc%' quals push the same way.
-	if q := d.EqualsQualString("id"); q != "" {
+	// The list API's only server-side filter is ?prefix=. The explicit prefix
+	// qual pushes down directly. An `id =` qual also pushes: the exact id is a
+	// valid prefix of itself, so it narrows the scan server-side while the SDK
+	// still post-filters rows to exact equality — results stay exact. LIKE
+	// 'abc%' quals push the same way. The explicit prefix wins when combined.
+	if p := d.EqualsQualString("prefix"); p != "" {
+		params.Prefix = tpuf.String(p)
+	} else if q := d.EqualsQualString("id"); q != "" {
 		params.Prefix = tpuf.String(q)
 	} else if quals := d.Quals["id"]; quals != nil {
 		for _, qual := range quals.Quals {
