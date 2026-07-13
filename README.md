@@ -1,7 +1,4 @@
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/turbopuffer-lockup-dark.svg">
-  <img alt="turbopuffer" src="docs/assets/turbopuffer-lockup-light.svg" width="360">
-</picture>
+<img alt="turbopuffer + Steampipe" src="docs/assets/turbopuffer-social-graphic.png" width="600">
 
 # turbopuffer plugin for Steampipe
 
