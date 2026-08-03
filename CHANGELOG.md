@@ -4,6 +4,16 @@ All notable changes to this plugin are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v0.0.4 - 2026-08-03
+
+### Changed
+
+- Bumped `turbopuffer-go` to v2.6.0. Its new features are query-authoring and
+  write-path only (RRF weights, compute attributes, highlight config), which
+  this read-only plugin does not use; the metadata, schema, and recall structs
+  the tables read from are unchanged, so there is no user-facing difference.
+- Bumped `goreleaser/goreleaser-action` to v7 in the release workflow.
+
 ## v0.0.3 - 2026-07-13
 
 ### Added
