@@ -54,6 +54,23 @@ order by
 limit 10;
 ```
 
+### Scope to one slice of a large estate
+
+The `prefix` qual pushes down to the API as a server-side filter, so on a big
+account only matching namespaces are listed instead of paging through all of
+them.
+
+```sql
+select
+  id,
+  region,
+  approx_row_count
+from
+  turbopuffer_namespace
+where
+  prefix = 'prod-';
+```
+
 ## Check security posture
 
 ### Find namespaces without customer-managed encryption

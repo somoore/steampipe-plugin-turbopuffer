@@ -74,3 +74,21 @@ where
 order by
   approx_logical_bytes desc;
 ```
+
+### List sharded namespaces
+
+Sharding is opt-in at namespace creation; `sharding_num_shards` is 0 for
+unsharded namespaces.
+
+```sql
+select
+  id,
+  region,
+  sharding_num_shards
+from
+  turbopuffer_namespace
+where
+  sharding_num_shards > 0
+order by
+  sharding_num_shards desc;
+```
