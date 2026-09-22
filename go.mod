@@ -5,7 +5,7 @@ go 1.26.0
 toolchain go1.26.4
 
 require (
-	github.com/turbopuffer/turbopuffer-go/v2 v2.6.0
+	github.com/turbopuffer/turbopuffer-go/v2 v2.7.0
 	github.com/turbot/steampipe-plugin-sdk/v5 v5.14.1
 )
 
