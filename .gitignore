@@ -42,3 +42,6 @@ dist/
 .steampipe/
 .powerpipe/
 
+
+# CI helper scripts are tracked (the scripts/ rule above is for local scratch)
+!.github/scripts/
