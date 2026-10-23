@@ -10,6 +10,8 @@ builds:
     flags: ["-tags=netgo", "-trimpath"]
     # no -s -w: keep the symbol table so govulncheck -mode binary can do symbol-level
     # reachability on shipped binaries (v0.0.5 was stripped and showed a false GO-2026-5932)
+    # An explicit value is required: when ldflags is omitted GoReleaser defaults to "-s -w ...".
+    ldflags: ["-X main.version={{.Version}} -X main.commit={{.Commit}}"]
     mod_timestamp: "{{ .CommitTimestamp }}"
 archives:
   - formats: [gz]
