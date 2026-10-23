@@ -31,4 +31,4 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         # actions/go-dependency-submission v2.0.3 crashes on cloud.google.com/go
         # ("expected no more than one package in cache with namespace+name").
-        run: .github/scripts/submit-go-deps.sh .
+        run: ci/submit-go-deps.sh .
