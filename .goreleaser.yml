@@ -8,7 +8,8 @@ builds:
     id: "steampipe"
     binary: "{{ .ProjectName }}.plugin"
     flags: ["-tags=netgo", "-trimpath"]
-    ldflags: ["-s -w"]
+    # no -s -w: keep the symbol table so govulncheck -mode binary can do symbol-level
+    # reachability on shipped binaries (v0.0.5 was stripped and showed a false GO-2026-5932)
     mod_timestamp: "{{ .CommitTimestamp }}"
 archives:
   - formats: [gz]
