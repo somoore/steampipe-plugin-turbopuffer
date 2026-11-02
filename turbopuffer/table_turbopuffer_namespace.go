@@ -2,6 +2,7 @@ package turbopuffer
 
 import (
 	"context"
+	"fmt"
 
 	tpuf "github.com/turbopuffer/turbopuffer-go/v2"
 	"github.com/turbot/steampipe-plugin-sdk/v5/grpc/proto"
@@ -105,7 +106,10 @@ func listNamespaces(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateD
 
 // getNamespaceMetadata hydrates a namespace row from the metadata API.
 func getNamespaceMetadata(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-	ns := h.Item.(namespaceRow)
+	ns, ok := h.Item.(namespaceRow)
+	if !ok {
+		return nil, fmt.Errorf("turbopuffer_namespace.getNamespaceMetadata: unexpected item type %T", h.Item)
+	}
 	client, err := getClient(ctx, d, ns.Region)
 	if err != nil {
 		return nil, err

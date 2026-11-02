@@ -4,6 +4,33 @@ All notable changes to this plugin are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Security
+
+- `turbopuffer_document` now strips sparse (`{}f16`) embeddings as well as
+  dense (`[N]f16/f32`) ones. The table promised "vectors are never included",
+  but the predicate only matched `[`-prefixed schema types, so sparse vectors
+  were returned in `attributes`.
+- Connection `regions` values are validated as single lowercase DNS labels
+  before use. The SDK substitutes the region into
+  `https://REGION.turbopuffer.com/`, so a value containing `/`, `@`, `?` or `.`
+  could have redirected the API key to another host. Invalid regions are
+  dropped with a warning (and rejected outright at client creation).
+- `turbopuffer_namespace_recall` rejects `queries`/`top_k` outside 1–1000
+  before issuing the (billable) request.
+- CI now fails if no secret scanner is available, and installs gitleaks; the
+  Dependabot config sets a 7-day cooldown on version updates.
+- Bumped `go-jose/v4` to v4.1.6 (DoS advisories in unused JOSE parsing paths).
+
+### Fixed
+
+- A non-positive `limit` no longer becomes `top_k = 0` on
+  `turbopuffer_document` (which the API rejects); it falls back to the 100-row
+  sample cap.
+- Unexpected hydrate item types now return an error instead of panicking the
+  plugin process.
+
 ## v0.0.4 - 2026-08-03
 
 ### Changed

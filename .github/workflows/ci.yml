@@ -21,9 +21,20 @@ jobs:
           go-version-file: go.mod
           cache: true
 
-      # make test = gofmt check + go vet + security checks + go test ./...
-      # The secret-scan step in ci/checks.sh skips gracefully when
-      # trufflehog/gitleaks aren't installed (GitHub does its own secret
-      # scanning), so no extra tooling is needed here.
+      # ci/checks.sh fails when no secret scanner is available and CI is set,
+      # so install gitleaks from a tagged release. This is a plain `go install`
+      # rather than another third-party action to pin.
+      - name: Install gitleaks
+        run: |
+          go install github.com/zricethezav/gitleaks/v8@v8.30.0
+          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+
+      # make test = gofmt check + go vet + security checks (incl. the gitleaks
+      # secret scan) + go test ./...
       - name: make test
         run: make test
+
+      # Security-relevant logic (region validation, vector redaction, recall
+      # bounds) is pure Go; run it under the race detector too.
+      - name: go test -race
+        run: go test -race ./...

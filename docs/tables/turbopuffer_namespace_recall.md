@@ -2,7 +2,7 @@
 
 On-demand recall evaluation: how closely ANN search approximates exhaustive ground truth. Silent recall degradation means retrieval is quietly wrong — an integrity signal worth watching.
 
-> **Cost warning:** each row runs real ANN searches *plus* exhaustive searches in the namespace. Always qual `namespace`; never wildcard this table in scheduled scans without intent.
+> **Cost warning:** each row runs real ANN searches *plus* exhaustive searches in the namespace. Always qual `namespace`; never wildcard this table in scheduled scans without intent. `queries` and `top_k` are capped at 1000 — larger values are rejected before any request is sent.
 
 ## Examples
 

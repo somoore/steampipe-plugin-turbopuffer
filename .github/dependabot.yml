@@ -4,6 +4,11 @@ updates:
     directory: "/"
     schedule:
       interval: weekly
+    # Let a new release age before Dependabot proposes it, so a compromised or
+    # broken upstream publish is more likely to be noticed first. Dependabot
+    # *security* updates bypass cooldown, so CVE fixes are never delayed.
+    cooldown:
+      default-days: 7
     # Group all Go module bumps into one PR to keep the noise down; security
     # bumps still open promptly.
     groups:
@@ -14,3 +19,6 @@ updates:
     directory: "/"
     schedule:
       interval: weekly
+    # Same cooldown for action releases; security updates still bypass it.
+    cooldown:
+      default-days: 7

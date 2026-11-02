@@ -62,10 +62,7 @@ func listDocuments(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateDa
 		return nil, err
 	}
 
-	topK := sampleCap
-	if d.QueryContext.Limit != nil && *d.QueryContext.Limit < topK {
-		topK = *d.QueryContext.Limit
-	}
+	topK := effectiveTopK(d.QueryContext.Limit)
 
 	params := tpuf.NamespaceQueryParams{
 		TopK:   tpuf.Int(topK),
@@ -89,8 +86,7 @@ func listDocuments(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateDa
 	}
 	vectorAttr := map[string]bool{}
 	for name, attr := range meta.Schema {
-		t := string(attr.Type)
-		if strings.HasPrefix(t, "[") && (strings.Contains(t, "f16") || strings.Contains(t, "f32")) {
+		if isVectorType(string(attr.Type)) {
 			vectorAttr[name] = true
 		}
 	}
@@ -101,29 +97,60 @@ func listDocuments(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateDa
 		return nil, err
 	}
 
-	// tpuf.Row is a map[string]any; `id` and `vector` are keys. The id is
-	// excluded from attributes: it's already the id column, and a copy inside
-	// the JSON would round-trip through float64 in the SDK's JSON pipeline,
-	// corrupting integer ids above 2^53.
 	for _, row := range res.Rows {
-		attrs := make(map[string]interface{}, len(row))
-		for k, v := range row {
-			if k == "id" || k == "vector" || vectorAttr[k] {
-				continue
-			}
-			attrs[k] = v
-		}
 		d.StreamListItem(ctx, documentRow{
 			Namespace:  namespace,
 			Region:     region,
 			ID:         documentID(row["id"]),
-			Attributes: attrs,
+			Attributes: documentAttributes(row, vectorAttr),
 		})
 		if d.RowsRemaining(ctx) == 0 {
 			return nil, nil
 		}
 	}
 	return nil, nil
+}
+
+// effectiveTopK bounds a scan to sampleCap; a non-positive LIMIT is ignored
+// rather than forwarded as top_k=0, which the API rejects.
+func effectiveTopK(limit *int64) int64 {
+	if limit != nil && *limit > 0 && *limit < sampleCap {
+		return *limit
+	}
+	return sampleCap
+}
+
+// isVectorType reports whether a schema type is an embedding and must never be
+// returned in the attributes column. Dense vectors are [DIMS]f16/f32 (and the
+// multi-vector []DIMS forms) and sparse vectors are {}f16. Scalar array types
+// such as []float and []string are legitimate filter values, not vectors.
+func isVectorType(t string) bool {
+	if !strings.HasPrefix(t, "[") && !strings.HasPrefix(t, "{}") {
+		return false
+	}
+	// The element type follows the final dimension/brace marker:
+	// "[8]f32" -> "f32", "[][8]f32" -> "f32", "{}f16" -> "f16".
+	elem := t[strings.LastIndexAny(t, "]}")+1:]
+	switch elem {
+	case "f16", "f32", "f64", "bf16":
+		return true
+	}
+	return false
+}
+
+// documentAttributes copies a row without the id, the default vector, or any
+// schema-identified vector attribute. The id is already the id column, and a
+// copy inside the JSON would round-trip through float64 in the SDK's JSON
+// pipeline, corrupting integer ids above 2^53.
+func documentAttributes(row tpuf.Row, vectorAttr map[string]bool) map[string]interface{} {
+	attrs := make(map[string]interface{}, len(row))
+	for k, v := range row {
+		if k == "id" || k == "vector" || vectorAttr[k] {
+			continue
+		}
+		attrs[k] = v
+	}
+	return attrs
 }
 
 // documentID renders a document id as text without numeric formatting

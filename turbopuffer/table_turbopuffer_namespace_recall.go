@@ -49,6 +49,22 @@ func tableTurbopufferNamespaceRecall(_ context.Context) *plugin.Table {
 
 //// LIST HYDRATE FUNCTIONS
 
+// Bounds on the billable recall parameters. Each row runs `queries` ANN
+// searches plus exhaustive ground-truth searches, so an unbounded qual is a
+// cost/availability hazard for the whole account.
+const (
+	maxRecallQueries int64 = 1000
+	maxRecallTopK    int64 = 1000
+)
+
+// recallBound validates one recall qual against a documented maximum.
+func recallBound(name string, v, max int64) (int64, error) {
+	if v < 1 || v > max {
+		return 0, fmt.Errorf("turbopuffer_namespace_recall: %s must be between 1 and %d (got %d)", name, max, v)
+	}
+	return v, nil
+}
+
 // listNamespaceRecall runs one recall evaluation and streams a row.
 func listNamespaceRecall(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) (interface{}, error) {
 	region := regionFromMatrix(ctx)
@@ -57,22 +73,30 @@ func listNamespaceRecall(ctx context.Context, d *plugin.QueryData, _ *plugin.Hyd
 		return nil, fmt.Errorf("turbopuffer_namespace_recall requires a namespace qual, e.g. where namespace = 'prod-acme'")
 	}
 
-	client, err := getClient(ctx, d, region)
-	if err != nil {
-		return nil, err
-	}
-
+	// Validate before any client/API work, so an out-of-range qual never
+	// becomes a billable request (or a retry of one).
 	params := tpuf.NamespaceRecallParams{}
 	var queries, topK *int64
 	if q := d.EqualsQuals["queries"]; q != nil {
-		v := q.GetInt64Value()
+		v, err := recallBound("queries", q.GetInt64Value(), maxRecallQueries)
+		if err != nil {
+			return nil, err
+		}
 		queries = &v
 		params.Num = tpuf.Int(v)
 	}
 	if q := d.EqualsQuals["top_k"]; q != nil {
-		v := q.GetInt64Value()
+		v, err := recallBound("top_k", q.GetInt64Value(), maxRecallTopK)
+		if err != nil {
+			return nil, err
+		}
 		topK = &v
 		params.TopK = tpuf.Int(v)
+	}
+
+	client, err := getClient(ctx, d, region)
+	if err != nil {
+		return nil, err
 	}
 
 	nsClient := client.Namespace(namespace)

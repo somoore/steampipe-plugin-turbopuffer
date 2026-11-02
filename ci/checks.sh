@@ -56,15 +56,18 @@ elif command -v gitleaks >/dev/null 2>&1; then
   else
     bad "gitleaks found secret(s) — run: gitleaks detect --source ."
   fi
+elif [ "${CI:-}" = "true" ] || [ "${CI:-}" = "1" ]; then
+  # CI must never report "all security checks passed" without having scanned.
+  bad "neither trufflehog nor gitleaks installed in CI — install one (the CI workflow installs gitleaks) so the secret scan cannot silently no-op"
 else
-  warn "neither trufflehog nor gitleaks installed — skipping secret scan (brew install trufflehog)"
+  warn "neither trufflehog nor gitleaks installed — skipping secret scan (brew install trufflehog; CI fails instead of skipping)"
 fi
 
 #### 3. No .env / credential files #############################################
 say "no credential files in tree"
 # Track-worthy credential files that must never be committed.
 env_hits=$(git ls-files -co --exclude-standard \
-  | grep -E '(^|/)\.env($|\.)|(^|/).*\.spc$|(^|/)credentials(\.|$)|\.pem$|\.p12$|id_rsa' \
+  | grep -E '(^|/)\.env($|\.)|(^|/)\.envrc$|(^|/)\.(npmrc|netrc)$|(^|/).*\.spc$|(^|/)credentials(\.|$)|\.pem$|\.p12$|\.key$|id_(rsa|ed25519|ecdsa)' \
   | grep -vE '(^|/)config/turbopuffer\.spc$' || true)
 if [ -n "$env_hits" ]; then
   bad "credential-shaped files present (add to .gitignore or remove):"

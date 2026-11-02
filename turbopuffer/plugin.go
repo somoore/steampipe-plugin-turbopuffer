@@ -38,7 +38,14 @@ const matrixKeyRegion = "region"
 
 // regionMatrix builds one matrix item per configured region.
 func regionMatrix(ctx context.Context, d *plugin.QueryData) []map[string]interface{} {
-	regions := configuredRegions(GetConfig(d.Connection))
+	cfg := GetConfig(d.Connection)
+	for _, r := range rejectedRegions(cfg) {
+		plugin.Logger(ctx).Warn("turbopuffer.regionMatrix",
+			"rejected_region", r,
+			"reason", "must be a lowercase DNS label matching "+regionPattern.String()+"; it is not used and cannot change the API host",
+		)
+	}
+	regions := configuredRegions(cfg)
 	matrix := make([]map[string]interface{}, 0, len(regions))
 	for _, r := range regions {
 		matrix = append(matrix, map[string]interface{}{matrixKeyRegion: r})

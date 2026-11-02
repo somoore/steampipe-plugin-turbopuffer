@@ -2,6 +2,7 @@ package turbopuffer
 
 import (
 	"context"
+	"fmt"
 	"sort"
 
 	tpuf "github.com/turbopuffer/turbopuffer-go/v2"
@@ -60,7 +61,10 @@ func tableTurbopufferNamespaceAttribute(_ context.Context) *plugin.Table {
 
 // listNamespaceAttributes flattens the parent namespace's schema.
 func listNamespaceAttributes(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-	parent := h.Item.(namespaceRow)
+	parent, ok := h.Item.(namespaceRow)
+	if !ok {
+		return nil, fmt.Errorf("turbopuffer_namespace_attribute.listNamespaceAttributes: unexpected item type %T", h.Item)
+	}
 
 	// Only expand the requested namespace, if qualed.
 	if q := d.EqualsQualString("namespace"); q != "" && q != parent.ID {
